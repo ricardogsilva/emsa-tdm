@@ -1,0 +1,9 @@
+bcrypt>=2.0.0
+celery >=4.1.1, <4.2.0
+cryptography>=0.9.3
+flask-bcrypt>=0.7.1
+flower >=0.7.3, <1.0
+git+https://github.com/apache/incubator-airflow.git@1.10.0
+psycopg2-binary>=2.7.4
+pygdal >= 2.2.3, <2.2.4
+redis>=2.10.5

@@ -1,0 +1,151 @@
+# Docker stack file suitable for usage in development
+#
+# This file is meant to be deployed on a single-host docker swarm. The local
+# source code dir is bind-mounted inside the relevant containers in order
+# to ease development
+
+version: "3.3"
+
+
+services:
+
+  rabbit:
+    image: rabbitmq:3.7.8-management-alpine
+    hostname: this_rabbit
+    networks:
+      - internal
+    ports:
+      - "8001:15672"
+
+  redis:
+    image: redis:5-alpine
+    networks:
+      - internal
+
+  airflow-db:
+    image: postgres:11-alpine
+    networks:
+    - internal
+    secrets:
+    - airflow-db-postgres-db
+    - airflow-db-postgres-user
+    - airflow-db-postgres-password
+    environment:
+      POSTGRES_DB_FILE: /run/secrets/airflow-db-postgres-db
+      POSTGRES_USER_FILE: /run/secrets/airflow-db-postgres-user
+      POSTGRES_PASSWORD_FILE: /run/secrets/airflow-db-postgres-password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  airflow-webadmin:
+    image: ricardogsilva/emsa-tdm:latest
+    volumes:
+      - type: bind
+        source: ..
+        target: /home/airflow
+    secrets:
+      - airflow-db-postgres-db
+      - airflow-db-postgres-user
+      - airflow-db-postgres-password
+    configs:
+      - source: airflow-config
+        target: /home/airflow/airflow.cfg
+        uid: "1000"
+        gid: "1000"
+    networks:
+      - internal
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW_HOME: /home/airflow
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  airflow-scheduler:
+    image: ricardogsilva/emsa-tdm:latest
+    volumes:
+    - type: bind
+      source: ..
+      target: /home/airflow
+    secrets:
+    - airflow-db-postgres-db
+    - airflow-db-postgres-user
+    - airflow-db-postgres-password
+    configs:
+    - source: airflow-config
+      target: /home/airflow/airflow.cfg
+      uid: "1000"
+      gid: "1000"
+    networks:
+    - internal
+    environment:
+      AIRFLOW_HOME: /home/airflow
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  airflow-worker:
+    image: ricardogsilva/emsa-tdm:latest
+    volumes:
+    - type: bind
+      source: ..
+      target: /home/airflow
+    secrets:
+    - airflow-db-postgres-db
+    - airflow-db-postgres-user
+    - airflow-db-postgres-password
+    configs:
+    - source: airflow-config
+      target: /home/airflow/airflow.cfg
+      uid: "1000"
+      gid: "1000"
+    networks:
+    - internal
+    environment:
+      AIRFLOW_HOME: /home/airflow
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+
+configs:
+  airflow-config:
+    file: ../airflow.cfg
+
+
+secrets:
+  airflow-db-postgres-db:
+    file: ../secrets/POSTGRES_DB
+  airflow-db-postgres-user:
+    file: ../secrets/POSTGRES_USER
+  airflow-db-postgres-password:
+    file: ../secrets/POSTGRES_PASSWORD
+
+
+networks:
+  internal:
+    driver: overlay
+    attachable: true
