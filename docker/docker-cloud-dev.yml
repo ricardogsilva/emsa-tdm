@@ -45,7 +45,7 @@ services:
         window: 120s
 
   airflow-webadmin:
-    image: ricardogsilva/emsa-tdm:latest
+    image: emsa-tdm:latest
     volumes:
       - type: bind
         source: ..
@@ -75,7 +75,7 @@ services:
         window: 120s
 
   airflow-scheduler:
-    image: ricardogsilva/emsa-tdm:latest
+    image: emsa-tdm:latest
     volumes:
     - type: bind
       source: ..
@@ -103,7 +103,7 @@ services:
         window: 120s
 
   airflow-worker:
-    image: ricardogsilva/emsa-tdm:latest
+    image: emsa-tdm:latest
     volumes:
     - type: bind
       source: ..

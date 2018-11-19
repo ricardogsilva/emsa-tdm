@@ -1,4 +1,7 @@
 secrets
-.idea
+
+*.pid
 logs
+
+.idea
 *.pyc
