@@ -1,0 +1,97 @@
+{
+  "output_grid_resolution": 1000,
+  "processing_tiles": 10,
+  "generation_frequencies": [
+    {
+      "name": "monthly"
+    },
+    {
+      "name": "seasonal"
+    },
+    {
+      "name": "yearly"
+    }
+  ],
+  "vessels": [
+    {
+      "name": "cargo",
+      "retriever": "emsatools.retrievers.DbRetriever",
+      "sensor_types": [
+        {
+          "name": "T-AIS",
+          "downsampling": {
+            "temporal": {
+              "unit": "hour",
+              "value": 4
+            },
+            "spatial": {
+              "unit": "km",
+              "value": 2
+            }
+          }
+        },
+        {
+          "name": "S-AIS",
+          "downsampling": {
+            "temporal": {
+              "unit": "hour",
+              "value": 4
+            },
+            "spatial": {
+              "unit": "km",
+              "value": 2
+            }
+          }
+        }
+      ],
+      "attribute_mappings": [
+        {
+          "ais_type": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "passenger",
+      "retriever": "emsatools.retrievers.DbRetriever",
+      "sensor_types": [
+        {
+          "name": "T-AIS",
+          "downsampling": {
+            "temporal": {
+              "unit": "hour",
+              "value": 4
+            },
+            "spatial": {
+              "unit": "km",
+              "value": 2
+            }
+          }
+        },
+        {
+          "name": "S-AIS",
+          "downsampling": {
+            "temporal": {
+              "unit": "hour",
+              "value": 4
+            },
+            "spatial": {
+              "unit": "km",
+              "value": 2
+            }
+          }
+        }
+      ],
+      "attribute_mappings": [
+        {
+          "ais_type": [
+            "3",
+            "4"
+          ]
+        }
+      ]
+    }
+  ]
+}
