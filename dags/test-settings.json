@@ -15,10 +15,15 @@
   "vessels": [
     {
       "name": "cargo",
-      "retriever": "emsatools.retrievers.DbRetriever",
+      "retriever": "{{ airflow_home }}.processing.retrievers:imdate_retriever",
       "sensor_types": [
         {
           "name": "T-AIS",
+          "mappings": [
+            {
+              "pos_sensor_id": [3]
+            }
+          ],
           "downsampling": {
             "temporal": {
               "unit": "hour",
@@ -32,6 +37,11 @@
         },
         {
           "name": "S-AIS",
+          "mappings": [
+            {
+              "pos_sensor_id": [5]
+            }
+          ],
           "downsampling": {
             "temporal": {
               "unit": "hour",
