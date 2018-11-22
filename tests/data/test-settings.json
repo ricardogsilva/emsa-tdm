@@ -1,6 +1,10 @@
 {
+  "region_of_interest": {
+    "name": "All EU",
+    "bbox_wkt": "POLYGON((-762675 101743, 6882490 101743, 6882490 7101740, -762675 7101740, -762675 101743))"
+  },
   "output_grid_resolution": 1000,
-  "processing_tiles": 1000,
+  "processing_tiles": 5,
   "generation_frequencies": [
     {
       "name": "monthly"

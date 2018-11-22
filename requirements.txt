@@ -7,4 +7,4 @@ git+https://github.com/apache/incubator-airflow.git@1.10.0
 psycopg2-binary>=2.7.4
 pygdal >= 2.2.3, <2.2.4
 redis>=2.10.5
-sympy
+shapely

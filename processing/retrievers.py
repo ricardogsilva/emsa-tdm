@@ -10,19 +10,22 @@
 
 """Ship Position Data retrievers"""
 
+import csv
 import datetime as dt
-import enum
+import pathlib
 from typing import List
 from typing import Optional
+
+import pytz
 
 
 class VesselDetail(object):
     id_: str
-    type_: VesselType
+    type_: str
     timestamp: dt.datetime
     position: None
 
-    def __init__(self, id_: str, type_: VesselType, timestamp: dt.datetime,
+    def __init__(self, id_: str, type_: str, timestamp: dt.datetime,
                  position):
         self.id_ = id_
         self.type_ = type_
@@ -60,3 +63,14 @@ def imdate_retriever(start: dt.datetime, end: dt.date,
     """
     # for each row, create a new vessel_detail object
     raise NotImplementedError
+
+
+def csv_retriever(start, end, region_of_interest, vessel_types,
+                  observation_types):
+    csv_path = pathlib.Path()
+    with open(csv_path, newline="") as fh:
+        reader = csv.DictReader(fh)
+        for row in reader:
+            ts = dt.datetime.strftime("%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.utc)
+            if end <= ts <= start:
+                pass

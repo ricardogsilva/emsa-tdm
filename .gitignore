@@ -8,3 +8,5 @@ logs
 
 .bash_history
 .python_history
+.ipython
+.jupyter

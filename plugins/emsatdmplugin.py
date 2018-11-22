@@ -46,9 +46,48 @@ def lazy_import(path: str):
 
     try:
         python_name = _lazy_import_filesystem_path(path)
+    except ImportError:
+        python_name = _lazy_import_filesystem_path_with_python_package(path)
     except (RuntimeError, KeyError):
         python_name = _lazy_import_python_path(path)
     return python_name
+
+
+def _lazy_import_filesystem_path_with_python_package(path:str):
+    """Lazily import a python name from a filesystem path
+
+    This function attempts to import the input ``path`` by assuming it is
+    part of a python package. This is useful for those cases where the code
+    in ``path`` uses relative imports.
+
+    Parameters
+    ----------
+    path: str
+        A colon separated string with the path to the module to load and the
+        name of the object to import
+
+    Returns
+    -------
+    The imported object
+
+    Raises
+    ------
+    KeyError
+        If the name is not found on the loaded python module
+    RuntimeError
+        If the path is not valid
+
+    """
+
+    filesystem_path, python_name = path.rpartition(":")[::2]
+    full_path = pathlib.Path(filesystem_path).expanduser().resolve()
+    if full_path.is_file():
+        sys.path.append(str(full_path.parents[1]))
+        loaded_module = import_module(
+            f"{full_path.parent.stem}.{full_path.stem}")
+        return loaded_module.__dict__.get(python_name)
+    else:
+        raise RuntimeError(f"Invalid path {full_path}")
 
 
 def _lazy_import_filesystem_path(path: str):

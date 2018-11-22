@@ -20,7 +20,7 @@ is bind mounted inside the relevant containers.
    STACK_NAME=emsa-tdms-dev
    docker stack deploy \
        --prune \
-       --compose-file docker/docker-cloud.yml \
+       --compose-file docker/docker-cloud-dev.yml \
        ${STACK_NAME}
    ```
    
