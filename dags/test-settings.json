@@ -1,6 +1,6 @@
 {
   "output_grid_resolution": 1000,
-  "processing_tiles": 10,
+  "processing_tiles": 1000,
   "generation_frequencies": [
     {
       "name": "monthly"
@@ -15,7 +15,7 @@
   "vessels": [
     {
       "name": "cargo",
-      "retriever": "{{ airflow_home }}.processing.retrievers:imdate_retriever",
+      "retriever": "{{ airflow_home }}.processing.retrievers:csv_retriever",
       "sensor_types": [
         {
           "name": "T-AIS",
@@ -65,7 +65,7 @@
     },
     {
       "name": "passenger",
-      "retriever": "emsatools.retrievers.DbRetriever",
+      "retriever": "{{ airflow_home }}.processing.retrievers:csv_retriever",
       "sensor_types": [
         {
           "name": "T-AIS",

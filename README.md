@@ -29,9 +29,21 @@ is bind mounted inside the relevant containers.
 
 -  Open a shell on one of the containers used in the stack
 
-```bash
-# first get the names of existing containers on the stack
-docker ps $STACK_NAME
-docker exec -ti <container-name> /bin/bash
+   ```bash
+   # first get the names of existing containers on the stack
+   docker ps $STACK_NAME
+   docker exec -ti <container-name> /bin/bash
+   
+   ```
 
-```
+-  Test some airflow task in a running container
+
+   ```bash
+   # first get the names of existing containers on the stack
+   docker ps $STACK_NAME
+   docker exec -ti <container-name> airflow test <dag-id> <task-id> <execution-date>
+   
+   ```
+   
+   Alternatively, you can open a shell in the container and just call 
+   `airflow test` inside it

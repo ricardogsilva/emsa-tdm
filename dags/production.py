@@ -4,10 +4,10 @@ import datetime as dt
 import json
 import pathlib
 
+from airflow import configuration
 from airflow import DAG
-from airflow.operators import python_operator
 from airflow.operators import subdag_operator
-import numpy as np
+from airflow.operators import EmsaTdmOperator
 
 default_args = {
     "owner": "airflow",
@@ -29,14 +29,8 @@ def get_settings():
         return json.load(fh)
 
 
-# TODO: Import the tdm-tools module and use it
-def some_task(**kwargs):
-    print(f"Hi {kwargs}")
-    some_grid = np.arange(0, 1000, 2)
-    print(some_grid)
-
-
 def generate_tile_dag(dag_id, settings, dag_params=None):
+    home = configuration.get("core", "airflow_home")
     dag = DAG(
         dag_id,
         description="A DAG to process stuff for a single spatial tile",
@@ -48,15 +42,17 @@ def generate_tile_dag(dag_id, settings, dag_params=None):
             vessel = vessel_config["name"]
             for sensor_config in vessel_config["sensor_types"]:
                 sensor = sensor_config["name"]
-                retrieve_data_task = python_operator.PythonOperator(
+                retrieve_data_task = EmsaTdmOperator(
                     task_id=f"retrieve_{vessel}_{sensor}_data",
-                    python_callable=some_task,
-                    provide_context=True
+                    handler=f"{home}/processing/tasks.py:retrieve_data",
+                    params={
+                        "sensor": sensor,
+                        "tile": None,
+                    }
                 )
-                pre_process_sensor_data_task = python_operator.PythonOperator(
+                pre_process_sensor_data_task = EmsaTdmOperator(
                     task_id=f"preprocess_{vessel}_{sensor}_data",
-                    python_callable=some_task,
-                    provide_context=True
+                    handler=f"{home}/processing/tasks.py:pre_process_data",
                 )
                 retrieve_data_task >> pre_process_sensor_data_task
     return dag
@@ -71,16 +67,16 @@ def generate_production_dag():
         schedule_interval=dt.timedelta(days=1)
     )
     with dag:
-        aggregator_task = python_operator.PythonOperator(
+        aggregator_task = EmsaTdmOperator(
             task_id="aggregator",
-            python_callable=some_task,
-            provide_context=True
+            handler="{{ airflow_home }}/processing/tasks.py:aggregator",
         )
         for tile in range(settings["processing_tiles"]):
             sub_dag_task_id = f"tile{tile:01d}"
             sub_dag_id = f"{dag.dag_id}.{sub_dag_task_id}"
             sub_dag = generate_tile_dag(sub_dag_id, settings)
-            sd = subdag_operator.SubDagOperator(task_id=sub_dag_task_id, subdag=sub_dag)
+            sd = subdag_operator.SubDagOperator(
+                task_id=sub_dag_task_id, subdag=sub_dag)
             sd >> aggregator_task
     return dag
 
