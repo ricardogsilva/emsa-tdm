@@ -9,10 +9,12 @@ from airflow import configuration
 from airflow import DAG
 from airflow.operators import subdag_operator
 from airflow.operators import EmsaTdmOperator
+import shapely.wkt
 
 sys.path.append(configuration.get("core", "airflow_home"))
 
 from processing import tiles
+from processing import utils
 
 
 
@@ -47,6 +49,7 @@ def generate_production_dag(settings):
         default_args=default_args,
         schedule_interval=dt.timedelta(days=1)
     )
+    dag.doc_md = """# This is some documentation for the DAG"""
     with dag:
         all_vessels_tdm_task = EmsaTdmOperator(
             task_id="all_vessels_tdm",
@@ -103,9 +106,16 @@ def generate_tile_dag(tile, vessel, dag_id, settings, dag_params=None):
         default_args=default_args,
         params=dag_params
     )
+    grid = tiles.build_grid(
+        shapely.wkt.loads(settings["region_of_interest"]),
+        settings["processing_tiles"]
+    )
+    tile_polygon, grid_coordinates = grid[tile]
+    dag.doc_md = f"tile {tile} wkt: {tile_polygon.wkt}"
     with dag:
-        vessel_config = [
-            item for item in settings["vessels"] if item["name"] == vessel][0]
+        vessel_config = utils.get_vessel_settings(settings, vessel)
+        # vessel_config = [
+        #     item for item in settings["vessels"] if item["name"] == vessel][0]
         merge_sensor_data_task = EmsaTdmOperator(
             task_id="merge_sensor_data",
             handler=f"{home}/processing/tasks.py:merge_data",
@@ -126,7 +136,7 @@ def generate_tile_dag(tile, vessel, dag_id, settings, dag_params=None):
             task_id="build_tdm",
             handler=f"{home}/processing/tasks.py:build_tdm",
         )
-        for sensor_config in vessel_config["sensor_types"]:
+        for sensor_config in settings["sensor_types"]:
             sensor = sensor_config["name"]
             retrieve_data_task = EmsaTdmOperator(
                 task_id=f"{sensor}_retrieve_data",

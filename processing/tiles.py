@@ -40,7 +40,7 @@ def build_grid(region_of_interest: Polygon, num_tiles:int):
         p2 = (next_x, current_y)
         p3 = (next_x, next_y)
         p4 = (current_x, next_y)
-        result.append(Polygon((p1, p2, p3, p4, p1)))
+        result.append((Polygon((p1, p2, p3, p4, p1)), (row, column)))
     return result
 
 

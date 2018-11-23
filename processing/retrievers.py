@@ -12,41 +12,21 @@
 
 import csv
 import datetime as dt
+import logging
 import pathlib
-from typing import List
 from typing import Optional
 
-import pytz
+from pyproj import Proj
+from pyproj import transform
+from shapely import geometry
 
-
-class VesselDetail(object):
-    id_: str
-    type_: str
-    timestamp: dt.datetime
-    position: None
-
-    def __init__(self, id_: str, type_: str, timestamp: dt.datetime,
-                 position):
-        self.id_ = id_
-        self.type_ = type_
-        self.timestamp = timestamp
-        self.position = position
-
-
-def get_vessel_positions(start: dt.datetime, end: dt.datetime,
-                         region_of_interest: Optional,
-                         vessel_types: List[VesselType],
-                         observation_types: List[ObservationType]):
-    # get settings from the admin API
-    # determine which concrete importers should be used
-    # call each importer sequentially
-    raise NotImplementedError
+logger = logging.getLogger(__name__)
 
 
 def imdate_retriever(start: dt.datetime, end: dt.date,
                      region_of_interest: Optional,
-                     vessel_types: List[VesselType],
-                     observation_types: List[ObservationType]):
+                     vessel_types,
+                     observation_types):
     # use sqlalchemy to retrieve the data
     # - add the mappings to the query
     # - add the region of interest to the query
@@ -65,12 +45,49 @@ def imdate_retriever(start: dt.datetime, end: dt.date,
     raise NotImplementedError
 
 
-def csv_retriever(start, end, region_of_interest, vessel_types,
-                  observation_types):
-    csv_path = pathlib.Path()
+def csv_retriever(start: dt.datetime, end: dt.datetime,
+                  region_of_interest: geometry.Polygon,
+                  vessel_types_mapping, sensor_type_mapping):
+    in_crs = Proj(init="epsg:4326")
+    out_crs = Proj(init="epsg:3035")
+    ais_types = get_ais_ship_types()
+    csv_path = pathlib.Path("~/data/AIS_export_201810.csv").expanduser()
     with open(csv_path, newline="") as fh:
         reader = csv.DictReader(fh)
         for row in reader:
-            ts = dt.datetime.strftime("%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.utc)
-            if end <= ts <= start:
-                pass
+            ts = dt.datetime.strptime(
+                row["TS"][:-3],
+                "%Y-%m-%d %H:%M:%S.%f"
+            ).replace(tzinfo=dt.timezone.utc)
+            if ts >= end:  # assumes positions are ordered by TS
+                break
+            elif ts < start:
+                continue
+            sensor_attribute_value = row.get(sensor_type_mapping["name"])
+            if sensor_attribute_value != str(sensor_type_mapping["value"]):
+                continue
+            coords = transform(in_crs, out_crs, row["LON"], row["LAT"])
+            point = geometry.Point(*coords)
+            if not point.within(region_of_interest):
+                continue
+            mmsi = row["MMSI"]
+            ship_type = ais_types.get(mmsi)
+            if ship_type not in vessel_types_mapping["values"]:
+                continue
+            yield mmsi, ts, point
+
+
+def get_ais_ship_types():
+    ovr_data_path = pathlib.Path(
+        "~/data/TDMS_ref_tables_sqlldr/sanitized_OVR_DATA_TABLE.csv"
+    ).expanduser().resolve()
+    ship_types = dict()
+    with ovr_data_path.open(encoding="utf-8") as fh:
+        for line in fh:
+            record = line.split("|")
+            mmsi = record[1]
+            ais_ship_type = record[8]
+            if ais_ship_type:
+                ship_types[mmsi] = int(ais_ship_type)
+    return ship_types
+

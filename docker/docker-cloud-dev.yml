@@ -50,6 +50,9 @@ services:
       - type: bind
         source: ..
         target: /home/airflow
+      - type: bind
+        source: /home/ricardo/Documents/GeoSolutions/emsa_tdm/data
+        target: /home/airflow/data
     secrets:
       - airflow-db-postgres-db
       - airflow-db-postgres-user

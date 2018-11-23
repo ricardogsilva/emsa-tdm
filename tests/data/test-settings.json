@@ -1,111 +1,62 @@
 {
-  "region_of_interest": {
-    "name": "All EU",
-    "bbox_wkt": "POLYGON((-762675 101743, 6882490 101743, 6882490 7101740, -762675 7101740, -762675 101743))"
-  },
+  "region_of_interest": "POLYGON((-762675 101743, 6882490 101743, 6882490 7101740, -762675 7101740, -762675 101743))",
   "output_grid_resolution": 1000,
-  "processing_tiles": 5,
-  "generation_frequencies": [
+  "processing_tiles": 9,
+  "retriever": "{{ airflow_home }}/processing/retrievers.py:csv_retriever",
+  "sensor_types": [
     {
-      "name": "monthly"
+      "name": "T-AIS",
+      "retriever_attribute_mapping": {
+        "name": "POS_SENSOR_ID",
+        "value": 3
+      },
+      "downsampling": {
+        "temporal": {
+          "unit": "hour",
+          "value": 4
+        },
+        "spatial": {
+          "unit": "km",
+          "value": 2
+        }
+      }
     },
     {
-      "name": "seasonal"
-    },
-    {
-      "name": "yearly"
+      "name": "S-AIS",
+      "retriever_attribute_mapping": {
+        "name": "POS_SENSOR_ID",
+        "value": 5
+      },
+      "downsampling": {
+        "temporal": {
+          "unit": "hour",
+          "value": 4
+        },
+        "spatial": {
+          "unit": "km",
+          "value": 2
+        }
+      }
     }
   ],
   "vessels": [
     {
       "name": "cargo",
-      "retriever": "{{ airflow_home }}.processing.retrievers:csv_retriever",
-      "sensor_types": [
-        {
-          "name": "T-AIS",
-          "mappings": [
-            {
-              "pos_sensor_id": [3]
-            }
-          ],
-          "downsampling": {
-            "temporal": {
-              "unit": "hour",
-              "value": 4
-            },
-            "spatial": {
-              "unit": "km",
-              "value": 2
-            }
-          }
-        },
-        {
-          "name": "S-AIS",
-          "mappings": [
-            {
-              "pos_sensor_id": [5]
-            }
-          ],
-          "downsampling": {
-            "temporal": {
-              "unit": "hour",
-              "value": 4
-            },
-            "spatial": {
-              "unit": "km",
-              "value": 2
-            }
-          }
-        }
-      ],
-      "attribute_mappings": [
-        {
-          "ais_type": [
-            "1",
-            "2"
-          ]
-        }
-      ]
+      "retriever_attribute_mapping": {
+        "name":"ais_type",
+        "values": [
+          360
+        ]
+      }
     },
     {
       "name": "passenger",
-      "retriever": "{{ airflow_home }}.processing.retrievers:csv_retriever",
-      "sensor_types": [
-        {
-          "name": "T-AIS",
-          "downsampling": {
-            "temporal": {
-              "unit": "hour",
-              "value": 4
-            },
-            "spatial": {
-              "unit": "km",
-              "value": 2
-            }
-          }
-        },
-        {
-          "name": "S-AIS",
-          "downsampling": {
-            "temporal": {
-              "unit": "hour",
-              "value": 4
-            },
-            "spatial": {
-              "unit": "km",
-              "value": 2
-            }
-          }
-        }
-      ],
-      "attribute_mappings": [
-        {
-          "ais_type": [
-            "3",
-            "4"
-          ]
-        }
-      ]
+      "retriever_attribute_mapping": {
+        "name": "ais_type",
+        "values": [
+          371
+        ]
+      }
     }
   ]
 }
